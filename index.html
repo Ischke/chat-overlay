@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="de">
 <head>
+<script src="https://unpkg.com/tmi.js@^2.0.0/dist/tmi.min.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Minimal Horizontal Chat</title>
+<title>Minimal Horizontal Chat v.02</title>
 <style>
   body {
     margin:0;
@@ -54,8 +55,6 @@
 </head>
 <body>
 <div id="chat"></div>
-
-<script src="https://unpkg.com/tmi.js@^2.0.0/dist/tmi.min.js"></script>
 <script>
 const CHANNEL = "ischke"; // <-- ersetzen
 const MAX_MESSAGES = 10;
@@ -106,4 +105,5 @@ client.on('message', (channel, tags, message, self) => {
 </script>
 </body>
 </html>
+
 
