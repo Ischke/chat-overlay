@@ -1,13 +1,108 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <title>Chat Overlay</title>
-  <style>
-    body { background: transparent; color: white; font-family: sans-serif; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minimal Horizontal Chat</title>
+<style>
+  body {
+    margin:0;
+    padding:0;
+    background: transparent;
+    font-family: sans-serif;
+    overflow:hidden;
+  }
+
+  #chat {
+    display:flex;
+    flex-direction: row; /* horizontal */
+    align-items:flex-end;
+    gap: 12px;
+    padding: 12px;
+    height: 100px; /* Höhe des Chat-Overlays */
+    overflow:hidden;
+  }
+
+  .message-row {
+    display:flex;
+    flex-direction: column;
+    min-width: 150px; /* Basisbreite jeder Nachricht */
+    max-width: 200px;
+    animation: slideIn 0.3s ease;
+    background: rgba(0,0,0,0.6);
+    border-radius: 10px;
+    padding: 6px 8px;
+    color:white;
+    font-size:14px;
+  }
+
+  .meta {
+    display:flex;
+    gap:4px;
+    font-weight:bold;
+    margin-bottom:2px;
+  }
+  .username { color:#ffcc00; }
+  .badges { color:#00ccff; }
+  .message-text { word-break: break-word; }
+
+  @keyframes slideIn {
+    from { transform: translateX(50px); opacity:0; }
+    to { transform: translateX(0); opacity:1; }
+  }
+</style>
 </head>
 <body>
-  <h1>Chat Overlay Test</h1>
+<div id="chat"></div>
+
+<script src="https://unpkg.com/tmi.js@^2.0.0/dist/tmi.min.js"></script>
+<script>
+const CHANNEL = "DEIN_CHANNELNAME"; // <-- ersetzen
+const MAX_MESSAGES = 10;
+const chatEl = document.getElementById('chat');
+
+function addMessage(tags, message){
+  const row = document.createElement('div');
+  row.className = 'message-row';
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+
+  const badges = document.createElement('span');
+  badges.className = 'badges';
+  if(tags.badges) {
+    badges.textContent = Object.keys(tags.badges).join(',');
+  }
+
+  const username = document.createElement('span');
+  username.className = 'username';
+  username.textContent = tags['display-name'] || tags.username;
+
+  meta.appendChild(badges);
+  meta.appendChild(username);
+
+  const msgText = document.createElement('div');
+  msgText.className = 'message-text';
+  msgText.textContent = message;
+
+  row.appendChild(meta);
+  row.appendChild(msgText);
+
+  // Neue Nachricht rechts einfügen
+  chatEl.appendChild(row);
+
+  // Wenn zu viele Nachrichten, älteste links entfernen
+  while(chatEl.children.length > MAX_MESSAGES){
+    chatEl.removeChild(chatEl.firstChild);
+  }
+}
+
+const client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [CHANNEL] });
+client.connect();
+
+client.on('message', (channel, tags, message, self) => {
+  addMessage(tags, message);
+});
+</script>
 </body>
 </html>
