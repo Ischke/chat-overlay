@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Twitch Chat Overlay v0.3</title>
+<title>Twitch Chat Overlay v0.4</title>
 <style>
   body {
     margin:0;
@@ -15,7 +15,7 @@
 
   #chat {
     display:flex;
-    flex-direction: row; /* horizontal */
+    flex-direction: row;
     align-items:flex-end;
     gap: 12px;
     padding: 12px;
@@ -55,55 +55,61 @@
 <body>
 <div id="chat"></div>
 
-<!-- tmi.js CDN -->
+<!-- tmi.js Script korrekt laden -->
 <script src="https://unpkg.com/tmi.js@^2.0.0/dist/tmi.min.js"></script>
 <script>
-const CHANNEL = "ischke"; // <-- ersetzen
-const MAX_MESSAGES = 10;
-const chatEl = document.getElementById('chat');
+document.addEventListener("DOMContentLoaded", () => {
+  const CHANNEL = "ischke"; // <-- hier ersetzen
+  const MAX_MESSAGES = 10;
+  const chatEl = document.getElementById('chat');
 
-function addMessage(tags, message){
-  const row = document.createElement('div');
-  row.className = 'message-row';
+  function addMessage(tags, message){
+    const row = document.createElement('div');
+    row.className = 'message-row';
 
-  const meta = document.createElement('div');
-  meta.className = 'meta';
+    const meta = document.createElement('div');
+    meta.className = 'meta';
 
-  const badges = document.createElement('span');
-  badges.className = 'badges';
-  if(tags.badges) {
-    badges.textContent = Object.keys(tags.badges).join(',');
+    const badges = document.createElement('span');
+    badges.className = 'badges';
+    if(tags.badges) {
+      badges.textContent = Object.keys(tags.badges).join(',');
+    }
+
+    const username = document.createElement('span');
+    username.className = 'username';
+    username.textContent = tags['display-name'] || tags.username;
+
+    meta.appendChild(badges);
+    meta.appendChild(username);
+
+    const msgText = document.createElement('div');
+    msgText.className = 'message-text';
+    msgText.textContent = message;
+
+    row.appendChild(meta);
+    row.appendChild(msgText);
+
+    // Neue Nachricht rechts
+    chatEl.appendChild(row);
+
+    // Älteste Nachricht entfernen, wenn zu viele
+    while(chatEl.children.length > MAX_MESSAGES){
+      chatEl.removeChild(chatEl.firstChild);
+    }
   }
 
-  const username = document.createElement('span');
-  username.className = 'username';
-  username.textContent = tags['display-name'] || tags.username;
+  // tmi.js Client erstellen
+  const client = new tmi.Client({
+    connection: { reconnect: true, secure: true },
+    channels: [CHANNEL]
+  });
 
-  meta.appendChild(badges);
-  meta.appendChild(username);
+  client.connect().catch(err => console.error("tmi.js connect error:", err));
 
-  const msgText = document.createElement('div');
-  msgText.className = 'message-text';
-  msgText.textContent = message;
-
-  row.appendChild(meta);
-  row.appendChild(msgText);
-
-  // Neue Nachricht rechts einfügen
-  chatEl.appendChild(row);
-
-  // Wenn zu viele Nachrichten, älteste links entfernen
-  while(chatEl.children.length > MAX_MESSAGES){
-    chatEl.removeChild(chatEl.firstChild);
-  }
-}
-
-// tmi.js client anonym verbinden
-const client = new tmi.Client({ connection: { reconnect: true, secure: true }, channels: [CHANNEL] });
-client.connect();
-
-client.on('message', (channel, tags, message, self) => {
-  addMessage(tags, message);
+  client.on('message', (channel, tags, message, self) => {
+    addMessage(tags, message);
+  });
 });
 </script>
 </body>
